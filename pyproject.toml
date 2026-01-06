@@ -1,0 +1,19 @@
+[project]
+name = "profitabull-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.128.0",
+    "pydantic-settings>=2.12.0",
+    "sqlmodel>=0.0.31",
+    "uvicorn>=0.40.0",
+]
+
+[project.scripts]
+dev = "app.cli:dev"
+prod = "app.cli:prod"
+
+[tool.uv]
+package = true
