@@ -3,7 +3,6 @@ from app.db.engine import engine
 
 import app.models
 
-
 def init_db():
     SQLModel.metadata.create_all(engine)
 

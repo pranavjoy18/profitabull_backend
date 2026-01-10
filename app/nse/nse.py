@@ -7,6 +7,7 @@ import httpx
 from typing import Dict, Any, List
 
 from pydantic import BaseModel
+from app.utils import time_async
 
 
 class NSEClient:
@@ -162,16 +163,10 @@ async def fetch_eod_data(
     return results
 
 if __name__ == '__main__':
+    @time_async("NSE fetch (3 symbols)")
     async def main():
-        start = time.perf_counter()
-
         data = await fetch_eod_data(["TCS", "INFY", "RELIANCE"])
         for sym, d in data.items():
             print(sym, d.model_dump())
-    
-        end = time.perf_counter()
-        elapsed = end - start
-
-        print(f"\n⏱️ Total execution time: {elapsed:.2f} seconds")
 
     asyncio.run(main())
