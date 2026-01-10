@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 
 from app.db.session import get_session
 from app.models.daily_screener_status import DailyScreenerStatus
+from app.models.daily_symbol_snapshot import DailySymbolSnapshot
 from app.models.index import Index
 from app.models.index_constituent import IndexConstituent
 from app.models.screener import Screener
@@ -35,14 +36,27 @@ def dashboard_view(
 
     symbol_ids = [sym.id for _, sym in constituents]
 
-    # 3️⃣ Fetch active screeners
+
+    # 3. Fetch NSE EOD snapshots
+    snapshots = session.exec(
+        select(DailySymbolSnapshot)
+        .where(DailySymbolSnapshot.trade_date == trade_date)
+        .where(DailySymbolSnapshot.symbol_id.in_(symbol_ids))
+    ).all()
+
+    snapshot_map = {
+        snap.symbol_id: snap
+        for snap in snapshots
+    }
+
+    # 4. Fetch active screeners
     screeners = session.exec(
         select(Screener).where(Screener.active == True)
     ).all()
 
     screener_ids = [s.id for s in screeners]
 
-    # 4️⃣ Fetch daily screener statuses
+    # 5. Fetch daily screener statuses
     statuses = session.exec(
         select(DailyScreenerStatus)
         .where(DailyScreenerStatus.trade_date == trade_date)
@@ -50,20 +64,20 @@ def dashboard_view(
         .where(DailyScreenerStatus.screener_id.in_(screener_ids))
     ).all()
 
-    # 5️⃣ Pivot screener status → lookup dict
+    # 6. Pivot screener status → lookup dict
     status_map = {}
     for s in statuses:
         status_map[(s.symbol_id, s.screener_id)] = True
 
-    # 6️⃣ Build rows
+    # 7. Build rows
     rows = []
     for constituent, symbol in constituents:
+        snapshot = snapshot_map.get(symbol.id)
         row = {
             "symbol": symbol.symbol,
             "weightage": constituent.weightage,
-            # NSE data will come later
-            "day_close": None,
-            "day_change_pct": None,
+            "day_close": snapshot.close_price if snapshot else None,
+            "day_change_pct": snapshot.change_pct if snapshot else None,
             "screeners": {
                 str(s.id): status_map.get((symbol.id, s.id), False)
                 for s in screeners
