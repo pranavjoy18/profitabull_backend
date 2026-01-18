@@ -8,3 +8,5 @@ class ChartinkWebhookPayload(BaseModel):
     triggered_at: Optional[str] = None
     scan_name: str
     scan_url: str
+    alert_name : str
+    webhook_url : str
